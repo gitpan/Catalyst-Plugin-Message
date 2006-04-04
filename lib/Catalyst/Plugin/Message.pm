@@ -2,7 +2,7 @@ package Catalyst::Plugin::Message;
 
 use warnings;
 use strict;
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 sub errmsg {
 	my $c = shift;
@@ -24,6 +24,15 @@ sub tipmsg {
 	}
 }
 
+sub diemsg {
+	my $c = shift;
+	my $msg = shift;
+	$c->stash->{diemsg} = $msg;
+	$c->stash->{template} = 'error.tpl';
+	$c->res->status(500);
+	die $c->error(0);
+}
+
 1;
 
 =pod
@@ -34,7 +43,7 @@ Catalyst::Plugin::Message - The great new Catalyst::Plugin::Message!
 
 =head1 VERSION
 
-Version 0.01
+Version 0.02
 
 =head1 SYNOPSIS
 
@@ -65,6 +74,34 @@ you can make more error messages relate to a key, only the first message will sa
 =head2 tipmsg
 
 same as errmsg, just make some tips message return.
+
+=head3 diemsg
+
+ # in your controller
+ use Catalyst qw/Message/;
+ sub edit : Local {
+     my ( $self, $c ) = @_;
+     my $client_id = $c->req->param('client_id');
+     my $client = $c->model('DBIC::Client')->find( $client_id );
+     $c->diemsg( "client not found with id: $client_id" ) unless $client;
+
+	 # continue when $client object is valid
+	 # ...
+	 
+     $c->stash->{'template'} = 'edit.tpl';
+ }
+
+ # error.tpl
+ [% diemsg %]
+
+Sometimes the fatal error occurs, which means we cannot continue to execute the rest code,
+and we wanner just raise the error to the client. For example as above, if the $client object
+not exists, maybe the parameter client_id invalid or the client has been deleted, then we need
+tell that what happened, but the internal $c->error simple save the error informations into
+stash and continue rest codes - of course we can use if-else to let it work, but why should we
+make it simple, just like native die() did? Here diemsg() comes, and the error information is a
+business logic, but not code logic, so we need not show the req-res-stash to user. Just tell your
+user what happend, and make them understand what's the point. :)
 
 =head1 AUTHOR
 
