@@ -2,7 +2,7 @@ package Catalyst::Plugin::Message;
 
 use warnings;
 use strict;
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 sub errmsg {
 	my $c = shift;
@@ -26,8 +26,8 @@ sub tipmsg {
 
 sub diemsg {
 	my $c = shift;
-	my $msg = shift;
-	$c->stash->{diemsg} = $msg;
+	my ( $msg, @string ) = @_;
+	$c->stash->{diemsg} = sprintf( $msg, @string );
 	$c->stash->{template} = 'error.tpl';
 	$c->res->status(500);
 	die $c->error(0);
@@ -43,7 +43,7 @@ Catalyst::Plugin::Message - The great new Catalyst::Plugin::Message!
 
 =head1 VERSION
 
-Version 0.02
+Version 0.03
 
 =head1 SYNOPSIS
 
@@ -83,7 +83,7 @@ same as errmsg, just make some tips message return.
      my ( $self, $c ) = @_;
      my $client_id = $c->req->param('client_id');
      my $client = $c->model('DBIC::Client')->find( $client_id );
-     $c->diemsg( "client not found with id: $client_id" ) unless $client;
+     $c->diemsg( "client not found with id: %s", $client_id ) unless $client;
 
 	 # continue when $client object is valid
 	 # ...
